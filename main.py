@@ -20,7 +20,6 @@ user_file = f'{project_dir}/numbers.json'
 def get_winning_numbers():
     for index, row in st.session_state['csv_df'].iterrows():
         if row["Draw Date"] == st.session_state['selected_date']:
-            print(row["Draw Date"] + " - " + st.session_state['selected_date'])
             st.session_state['winning_numbers'] = row.iloc[1:7].tolist()
             break
 
