@@ -1,15 +1,15 @@
 # Imports
-import csv
+from pathlib import Path
+from PIL import Image, ImageOps
 import json
 import os
-from numpy import rint
-from numpy import rint
 import pandas as pd
 import requests
 import streamlit as st
 
-# Gets the directory of the currently running script
+# Gets the directory of the currently running script and sets the current ticket image path
 project_dir = os.path.dirname(os.path.abspath(__file__))
+ticket_image_path = f'{project_dir}/data/ticket.jpeg'
 
 # Texas Lotto CSV URL and project file paths
 url = "https://www.texaslottery.com/export/sites/lottery/Games/Lotto_Texas/Winning_Numbers/lottotexas.csv"
@@ -68,6 +68,23 @@ def main():
     with st.sidebar:
         st.header("Select a Drawing Date")
         st.sidebar.selectbox("Drawing Date", options=st.session_state['csv_df'].iloc[::-1, 0].tolist(), key="selected_date") 
+
+        st.space("large")
+        st.divider()
+        st.space("large")
+
+        if ticket_image_path and Path(ticket_image_path).exists():
+            image = Image.open(ticket_image_path)
+            image = ImageOps.exif_transpose(image)
+            st.image(image, caption="Current ticket", width='stretch')
+
+        uploaded_file = st.file_uploader(label="Upload an image from your computer or phone", type=["png", "jpg", "jpeg"])
+
+        if uploaded_file is not None:
+            image = Image.open(uploaded_file)
+            image = ImageOps.exif_transpose(image)  
+            image.save(ticket_image_path)
+            st.rerun()
 
     get_winning_numbers()
 
