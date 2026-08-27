@@ -8,13 +8,13 @@ import requests
 import streamlit as st
 
 # Gets the directory of the currently running script and sets the current ticket image path
-project_dir = os.path.dirname(os.path.abspath(__file__))
-ticket_image_path = f'{project_dir}/data/ticket.jpeg'
+PROJECT_DIR = Path(__file__).resolve().parent
+DATA_DIR = PROJECT_DIR / "data"
+DATA_DIR.mkdir(exist_ok=True)
 
 # Texas Lotto CSV URL and project file paths
 url = "https://www.texaslottery.com/export/sites/lottery/Games/Lotto_Texas/Winning_Numbers/lottotexas.csv"
-csv_file = f'{project_dir}/data/texas-lotto.csv'
-user_file = f'{project_dir}/numbers.json'
+csv_file = f'{DATA_DIR}/texas-lotto.csv'
 
 # Gets the winning numbers for the selected drawing date, displays them and then highlights them in the user's numbers dataframe
 def get_winning_numbers():
@@ -54,7 +54,7 @@ def main():
     # Loads the user numbers from the numbers.json file if they don't exist in the session state
     if "user_df" not in st.session_state:
         # Open the numbers.json file and load the data
-        with open(f'{project_dir}/numbers.json', 'r', encoding='utf-8') as file:
+        with open(f'{PROJECT_DIR}/numbers.json', 'r', encoding='utf-8') as file:
             data = json.load(file)
 
         user_numbers = []
@@ -69,22 +69,51 @@ def main():
         st.header("Select a Drawing Date")
         st.sidebar.selectbox("Drawing Date", options=st.session_state['csv_df'].iloc[::-1, 0].tolist(), key="selected_date") 
 
-        st.space("large")
-        st.divider()
-        st.space("large")
+        with st.sidebar.container(key="sidebar_bottom"):
+            uploaded_file = st.file_uploader("Upload lottery ticket", type=["jpg", "jpeg", "png"])
 
-        if ticket_image_path and Path(ticket_image_path).exists():
-            image = Image.open(ticket_image_path)
-            image = ImageOps.exif_transpose(image)
-            st.image(image, caption="Current ticket", width='stretch')
+            if uploaded_file is not None:
+                for ext in ["jpg", "jpeg", "png"]:
+                    old_file = DATA_DIR / f"lotto_ticket.{ext}"
+                    if old_file.exists():
+                        old_file.unlink()
 
-        uploaded_file = st.file_uploader(label="Upload an image from your computer or phone", type=["png", "jpg", "jpeg"])
+                image = Image.open(uploaded_file)
+                image = ImageOps.exif_transpose(image)
 
-        if uploaded_file is not None:
-            image = Image.open(uploaded_file)
-            image = ImageOps.exif_transpose(image)  
-            image.save(ticket_image_path)
-            st.rerun()
+                if image.format == "PNG":
+                    output_path = DATA_DIR / "lotto_ticket.png"
+                    image.save(output_path, format="PNG")
+                else:
+                    if image.mode != "RGB":
+                        image = image.convert("RGB")
+
+                    output_path = DATA_DIR / "lotto_ticket.jpg"
+                    image.save(output_path, format="JPEG", quality=95)
+
+            ticket_file = list(DATA_DIR.glob("lotto_ticket.*"))
+
+            if ticket_file:
+                st.image(str(ticket_file[0]), caption="Current Lottery Ticket", width="stretch")
+            else:
+                st.info("No lottery ticket has been uploaded.")
+
+        
+            st.caption("© Tim's App")
+
+            # Inject CSS to position that specific container at the bottom
+            st.html("""
+                <style>
+                .st-key-sidebar_bottom {
+                    position: absolute;
+                    bottom: 20px;
+                    left: 0;
+                    right: 0;
+                    padding: 0 1rem;
+                }
+                </style>
+            """)
+
 
     get_winning_numbers()
 
