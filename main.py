@@ -23,7 +23,8 @@ def get_winning_numbers():
             st.session_state['winning_numbers'] = row.iloc[1:7].tolist()
             break
 
-    st.subheader(f"Texas Lotto Winning Numbers: {', '.join(map(str, sorted(st.session_state['winning_numbers'])))}")
+    st.header(f"Texas Lotto Winning Numbers ({st.session_state['selected_date']})")
+    st.subheader(f"{', '.join(map(str, sorted(st.session_state['winning_numbers'])))}")
     st.space()
 
     center_config = {col: st.column_config.Column(alignment="center") for col in st.session_state['user_df'].columns}
@@ -97,22 +98,21 @@ def main():
                 st.image(str(ticket_file[0]), caption="Current Lottery Ticket", width="stretch")
             else:
                 st.info("No lottery ticket has been uploaded.")
-
-        
+                
             st.caption("© Tim's App")
 
             # Inject CSS to position that specific container at the bottom
             st.html("""
-                <style>
-                .st-key-sidebar_bottom {
-                    position: absolute;
-                    bottom: 20px;
-                    left: 0;
-                    right: 0;
-                    padding: 0 1rem;
-                }
-                </style>
-            """)
+                        <style>
+                        .st-key-sidebar_bottom {
+                            position: absolute;
+                            bottom: 20px;
+                            left: 0;
+                            right: 0;
+                            padding: 0 1rem;
+                        }
+                        </style>
+                    """)
 
 
     get_winning_numbers()
